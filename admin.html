@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swift Reply Admin | Email Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-header {
+            background-color: var(--color-text) ;
+            color: white;
+            padding: var(--spacing-lg) 0;
+        }
+        
+        .admin-title {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .admin-title svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .admin-content {
+            padding: var(--spacing-2xl) 0;
+        }
+        
+        .admin-card {
+            background-color: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--color-border);
+        }
+        
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .admin-stat-card {
+            background-color: var(--color-background-light);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            text-align: center;
+            border: 1px solid var(--color-border);
+        }
+        
+        .admin-stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .admin-stat-label {
+            color: var(--color-text-light);
+            font-size: 0.875rem;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .admin-table th {
+            text-align: left;
+            padding: var(--spacing-md);
+            border-bottom: 2px solid var(--color-border);
+            color: var(--color-text);
+            font-weight: 600;
+        }
+        
+        .admin-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-light);
+        }
+        
+        .admin-table tr:hover {
+            background-color: var(--color-background-light);
+        }
+        
+        .admin-pagination {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .admin-pagination button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .admin-pagination button.active {
+            background-color: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--color-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <div class="container">
+            <div class="admin-title">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                </svg>
+                <h1>Swift Reply Admin</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-content">
+        <div class="container">
+            <div id="login-section" class="admin-card">
+                <h2>Admin Login</h2>
+                <p>Enter your admin key to access the email management dashboard.</p>
+                <div class="form-group">
+                    <label for="admin-key">Admin Key</label>
+                    <input type="password" id="admin-key" placeholder="Enter admin key">
+                </div>
+                <button id="login-button" class="btn btn-primary">Login</button>
+                <div id="login-error" class="error-message hidden" style="color: var(--color-error) ; margin-top: var(--spacing-md);"></div>
+            </div>
+
+            <div id="dashboard-section" class="hidden">
+                <div class="admin-card">
+                    <h2>Email Signup Analytics</h2>
+                    <div class="admin-stats">
+                        <div class="admin-stat-card">
+                            <div id="total-signups" class="admin-stat-number">0</div>
+                            <div class="admin-stat-label">Total Signups</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div id="today-signups" class="admin-stat-number">0</div>
+                            <div class="admin-stat-label">Today's Signups</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div id="last-7-days" class="admin-stat-number">0</div>
+                            <div class="admin-stat-label">Last 7 Days</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="signups-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h2>Email List</h2>
+                    <div class="admin-actions">
+                        <button id="export-csv" class="btn btn-secondary">Export as CSV</button>
+                        <button id="refresh-data" class="btn btn-outline">Refresh Data</button>
+                    </div>
+                    <div id="loading" class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div id="email-table-container" class="hidden">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="email-table-body">
+                                <!-- Email data will be inserted here -->
+                            </tbody>
+                        </table>
+                        <div id="pagination" class="admin-pagination">
+                            <!-- Pagination buttons will be inserted here -->
+                        </div>
+                    </div>
+                    <div id="no-data" class="hidden" style="text-align: center; padding: var(--spacing-xl);">
+                        <p>No email signups yet. When users join the waitlist, their information will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 Swift Reply. All rights reserved.</p>
+                <div class="footer-admin">
+                    <a href="/" class="btn btn-text">Back to Website</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function()  {
+            // DOM elements
+            const loginSection = document.getElementById('login-section');
+            const dashboardSection = document.getElementById('dashboard-section');
+            const adminKeyInput = document.getElementById('admin-key');
+            const loginButton = document.getElementById('login-button');
+            const loginError = document.getElementById('login-error');
+            const totalSignups = document.getElementById('total-signups');
+            const todaySignups = document.getElementById('today-signups');
+            const last7Days = document.getElementById('last-7-days');
+            const exportCsvButton = document.getElementById('export-csv');
+            const refreshDataButton = document.getElementById('refresh-data');
+            const loading = document.getElementById('loading');
+            const emailTableContainer = document.getElementById('email-table-container');
+            const emailTableBody = document.getElementById('email-table-body');
+            const pagination = document.getElementById('pagination');
+            const noData = document.getElementById('no-data');
+            
+            // Constants
+            const ADMIN_KEY = 'swiftreply2025'; // This would be more secure in a real implementation
+            const ITEMS_PER_PAGE = 10;
+            
+            // State
+            let currentPage = 1;
+            let emailData = [];
+            let signupChart = null;
+            
+            // Login handler
+            loginButton.addEventListener('click', function() {
+                const adminKey = adminKeyInput.value.trim();
+                
+                if (adminKey === ADMIN_KEY) {
+                    // Show dashboard
+                    loginSection.classList.add('hidden');
+                    dashboardSection.classList.remove('hidden');
+                    
+                    // Load data
+                    loadData();
+                } else {
+                    // Show error
+                    loginError.textContent = 'Invalid admin key. Please try again.';
+                    loginError.classList.remove('hidden');
+                }
+            });
+            
+            // Enter key for login
+            adminKeyInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    loginButton.click();
+                }
+            });
+            
+            // Export CSV handler
+            exportCsvButton.addEventListener('click', function() {
+                if (emailData.length === 0) {
+                    alert('No data to export');
+                    return;
+                }
+                
+                // Create CSV content
+                const headers = ['Name', 'Email', 'Date'];
+                const csvRows = [
+                    headers.join(','),
+                    ...emailData.map(entry => [
+                        `"${entry.name || ''}"`,
+                        `"${entry.email || ''}"`,
+                        `"${new Date(entry.timestamp).toLocaleString()}"`
+                    ].join(','))
+                ];
+                
+                const csvContent = csvRows.join('\n');
+                
+                // Create download link
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `swift-reply-leads-${new Date().toISOString().slice(0,10)}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            // Refresh data handler
+            refreshDataButton.addEventListener('click', loadData);
+            
+            // Load data function
+            function loadData() {
+                showLoading();
+                
+                // Get data from localStorage
+                try {
+                    emailData = JSON.parse(localStorage.getItem('swiftReplyWaitlist') || '[]');
+                    
+                    if (emailData.length === 0) {
+                        showNoData();
+                    } else {
+                        // Sort by timestamp (newest first)
+                        emailData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        
+                        // Calculate today's signups
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        const todayCount = emailData.filter(email => {
+                            const emailDate = new Date(email.timestamp);
+                            return emailDate >= today;
+                        }).length;
+                        
+                        todaySignups.textContent = todayCount;
+                        
+                        // Calculate last 7 days signups
+                        const last7DaysDate = new Date();
+                        last7DaysDate.setDate(last7DaysDate.getDate() - 7);
+                        last7DaysDate.setHours(0, 0, 0, 0);
+                        
+                        const last7DaysCount = emailData.filter(email => {
+                            const emailDate = new Date(email.timestamp);
+                            return emailDate >= last7DaysDate;
+                        }).length;
+                        
+                        last7Days.textContent = last7DaysCount;
+                        
+                        // Update total
+                        totalSignups.textContent = emailData.length;
+                        
+                        // Render table
+                        renderTable();
+                        
+                        // Render chart
+                        renderChart();
+                    }
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    showNoData();
+                }
+                
+                hideLoading();
+            }
+            
+            // Render table function
+            function renderTable() {
+                // Clear table
+                emailTableBody.innerHTML = '';
+                
+                // Calculate pagination
+                const totalPages = Math.ceil(emailData.length / ITEMS_PER_PAGE);
+                const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, emailData.length);
+                
+                // Render table rows
+                for (let i = startIndex; i < endIndex; i++) {
+                    const email = emailData[i];
+                    const row = document.createElement('tr');
+                    
+                    // Format date
+                    const date = new Date(email.timestamp);
+                    const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                    
+                    row.innerHTML = `
+                        <td>${email.name}</td>
+                        <td>${email.email}</td>
+                        <td>${formattedDate}</td>
+                    `;
+                    
+                    emailTableBody.appendChild(row);
+                }
+                
+                // Render pagination
+                renderPagination(totalPages);
+                
+                // Show table
+                emailTableContainer.classList.remove('hidden');
+                noData.classList.add('hidden');
+            }
+            
+            // Render pagination function
+            function renderPagination(totalPages) {
+                // Clear pagination
+                pagination.innerHTML = '';
+                
+                if (totalPages <= 1) {
+                    return;
+                }
+                
+                // Previous button
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '←';
+                prevButton.disabled = currentPage === 1;
+                prevButton.addEventListener('click', function() {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderTable();
+                    }
+                });
+                pagination.appendChild(prevButton);
+                
+                // Page buttons
+                const maxButtons = 5;
+                const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.textContent = i;
+                    pageButton.classList.toggle('active', i === currentPage);
+                    pageButton.addEventListener('click', function() {
+                        currentPage = i;
+                        renderTable();
+                    });
+                    pagination.appendChild(pageButton);
+                }
+                
+                // Next button
+                const nextButton = document.createElement('button');
+                nextButton.textContent = '→';
+                nextButton.disabled = currentPage === totalPages;
+                nextButton.addEventListener('click', function() {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderTable();
+                    }
+                });
+                pagination.appendChild(nextButton);
+            }
+            
+            // Render chart function
+            function renderChart() {
+                // Prepare data for last 30 days
+                const labels = [];
+                const data = [];
+                
+                // Get last 30 days
+                const today = new Date();
+                const counts = {};
+                
+                // Initialize counts for last 30 days
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(today.getDate() - i);
+                    const dateString = date.toISOString().slice(0, 10);
+                    labels.push(dateString);
+                    counts[dateString] = 0;
+                }
+                
+                // Count signups by date
+                emailData.forEach(email => {
+                    const date = new Date(email.timestamp);
+                    const dateString = date.toISOString().slice(0, 10);
+                    if (counts[dateString] !== undefined) {
+                        counts[dateString]++;
+                    }
+                });
+                
+                // Convert counts to array
+                labels.forEach(dateString => {
+                    data.push(counts[dateString]);
+                });
+                
+                // Create chart
+                const ctx = document.getElementById('signups-chart').getContext('2d');
+                
+                if (signupChart) {
+                    signupChart.destroy();
+                }
+                
+                signupChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Email Signups',
+                            data: data,
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Show loading function
+            function showLoading() {
+                loading.classList.remove('hidden');
+                emailTableContainer.classList.add('hidden');
+                noData.classList.add('hidden');
+            }
+            
+            // Hide loading function
+            function hideLoading() {
+                loading.classList.add('hidden');
+            }
+            
+            // Show no data function
+            function showNoData() {
+                emailTableContainer.classList.add('hidden');
+                noData.classList.remove('hidden');
+            }
+            
+            // Check for admin key in URL (for direct access)
+            const urlParams = new URLSearchParams(window.location.search);
+            const adminKeyParam = urlParams.get('key');
+            
+            if (adminKeyParam === ADMIN_KEY) {
+                loginSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                loadData();
+            }
+        });
+    </script>
+</body>
+</html>
